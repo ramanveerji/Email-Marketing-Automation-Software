@@ -122,25 +122,18 @@ class Email:
 
             if 'Email' in data.columns:
                 self.EMAIL = list(data['Email'])
-                # print(EMAIL)
-                c = []
-                for i in self.EMAIL:
-                    # print(i)
-                    if (pd.isnull(i)) == False:
-                        ## givs data only which is filled
-                        # print(i)
-                        c.append(i)
+                c = [i for i in self.EMAIL if (pd.isnull(i)) == False]
                 self.EMAIL = c
-                if len(self.EMAIL) > 0:
+                if self.EMAIL:
                     self.to_entry.config(state=NORMAL)
                     self.to_entry.delete(0, END)
                     self.to_entry.insert(0, str(op.name.split("/")[-1]))
                     self.to_entry.config(state='readonly')
-                    self.Total.config(text="Total: " + str(len(self.EMAIL)) )
+                    self.Total.config(text=f"Total: {len(self.EMAIL)}")
                     self.Sent.config(text="Sent: ")
                     self.Left.config(text="Left: ")
                     self.Failed.config(text="Failed: ")
-                # print(EMAIL)
+                        # print(EMAIL)
 
 
             else:
@@ -169,10 +162,10 @@ class Email:
                 for x in self.EMAIL:
                     status=code_email.Email_send_function(x,self.sub_entry.get(),self.message_entry.get('1.0',END),self.uname,self.pasw)
 
-                    if status=="s":
-                       self.s_count+=1
-                    if status=="f":
-                       self.f_count+=1
+                    if status == "f":
+                        self.f_count+=1
+                    elif status == "s":
+                        self.s_count+=1
                     self.status_bar()
                     time.sleep(1)
 
@@ -199,10 +192,12 @@ class Email:
 
 
     def status_bar(self):
-        self.Total.config(text="Status " + str(len(self.EMAIL))+":-")
-        self.Sent.config(text="Sent: "+ str(self.s_count))
-        self.Left.config(text="Left: "+ str(len(self.EMAIL)-(self.f_count+self.s_count)))
-        self.Failed.config(text="Failed: "+ str(self.f_count))
+        self.Total.config(text=f"Status {len(self.EMAIL)}:-")
+        self.Sent.config(text=f"Sent: {str(self.s_count)}")
+        self.Left.config(
+            text=f"Left: {str(len(self.EMAIL) - (self.f_count + self.s_count))}"
+        )
+        self.Failed.config(text=f"Failed: {str(self.f_count)}")
         self.Total.update()
         self.Sent.update()
         self.Left.update()
@@ -283,13 +278,11 @@ class Email:
 
     def check_file_exist(self):
         if os.path.exists("important.txt") == False:
-            f = open('important.txt', 'w')
-            f.write(",")
-            f.close()
+            with open('important.txt', 'w') as f:
+                f.write(",")
         f2 = open('important.txt', 'r')
         self.credentials = []
-        for i in f2:
-            self.credentials.append([i.split(",")[0], i.split(",")[1]])
+        self.credentials.extend([i.split(",")[0], i.split(",")[1]] for i in f2)
         # print(self.credentials)
         self.uname = self.credentials[0][0]
         self.pasw = self.credentials[0][1]
@@ -300,9 +293,8 @@ class Email:
             messagebox.showinfo("ERROR", "All feilds are required", parent=self.root2)
 
         else:
-            f = open('important.txt', 'w')
-            f.write(self.uname_entry.get() + "," + self.pasw_entry.get())
-            f.close()
+            with open('important.txt', 'w') as f:
+                f.write(self.uname_entry.get() + "," + self.pasw_entry.get())
             messagebox.showinfo("Sent", "Email and password are saved Successfully", parent=self.root2)
             self.check_file_exist()
 
